@@ -1,0 +1,24 @@
+# Veblen / AI Systems Australia — Security Gate (gitleaks config)
+# Layer 1 of the Security Review Program. Extends gitleaks' built-in ruleset.
+#
+# RULE: keep allowlists TIGHT and SCOPED. Never blanket-disable a rule or add a
+# broad path glob. Fix a false positive with the narrowest possible entry, and
+# prefer an inline `gitleaks:allow` comment on the specific line over a global rule.
+title = "Veblen Security Gate"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Scoped allowlists: synthetic test fixtures and obvious placeholders only."
+paths = [
+  '''gate/test/.*''',          # gate self-test fixtures (synthetic secrets); the test runner uses temp dirs, this just covers any committed sample
+  '''engine/fixtures/.*''',    # M7 calibration fixtures (intentional planted vulns/secrets); council scans them at runtime via temp-dir default rules, so commit-time exemption is safe
+  '''.*\.example$''',          # *.example template files
+  '''.*\.sample$''',           # *.sample template files
+]
+regexes = [
+  '''EXAMPLE''',                                          # AWS docs key AKIAIOSFODNN7EXAMPLE and similar
+  '''(?i)your[_-]?(api|secret|token|key|password)[_-]?here''',
+  '''(?i)(placeholder|dummy|changeme|<[a-z0-9_.-]+>)''',  # angle-bracket placeholders like <your-token>
+]

@@ -1,0 +1,15 @@
+.DS_Store
+Thumbs.db
+desktop.ini
+*.log
+node_modules/
+
+# Large media — host on CDN, not git
+assets/Coridor videos/
+assets/real clients-real numbers/NT2-topaz-upscale-2x.png
+
+# Unused raw assets — not referenced by any page
+assets/real clients-real numbers/
+assets/Coridor videos/NEW TECH TRAILER MARCH 2026 RECAP.mov.mp4
+assets/Coridor videos/TTTM (thunder) 1080p new thumb.mp4
+docs/

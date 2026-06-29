@@ -714,23 +714,15 @@
     });
   }
 
-  /* ── poster videos: lazy-attach when R2 URLs are provided ── */
-  if ("IntersectionObserver" in window) {
-    var io = new IntersectionObserver(function (entries) {
-      entries.forEach(function (entry) {
-        if (!entry.isIntersecting) return;
-        var fig = entry.target, src = fig.dataset.video;
-        if (src && !fig.querySelector("video")) {
-          var v = document.createElement("video");
-          v.src = src; v.muted = true; v.loop = true; v.playsInline = true; v.autoplay = true;
-          v.setAttribute("preload", "none");
-          (fig.querySelector(".poster__frame") || fig).prepend(v);
-        }
-        io.unobserve(fig);
-      });
-    }, { rootMargin: "300px" });
-    document.querySelectorAll(".poster[data-video]").forEach(function (r) { io.observe(r); });
-  }
+  /* ── poster videos: attach on load (IntersectionObserver unreliable inside preserve-3d) ── */
+  document.querySelectorAll(".poster[data-video]").forEach(function (fig) {
+    var src = fig.dataset.video;
+    if (!src) return;
+    var v = document.createElement("video");
+    v.src = src; v.muted = true; v.loop = true; v.playsInline = true; v.autoplay = true;
+    v.setAttribute("preload", "none");
+    (fig.querySelector(".poster__frame") || fig).prepend(v);
+  });
 
 
   

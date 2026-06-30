@@ -216,8 +216,10 @@
     var dctx = dustCanvas.getContext("2d");
     var DDPR = Math.min(window.devicePixelRatio || 1, 1.75);
     var pts = [];
+    var cPts = [];
     var built = false;
-    var _titleEl = document.querySelector(".hero__title");
+    var _titleEl   = document.querySelector(".hero__title");
+    var _competeEl = document.querySelector(".hero__compete");
 
     function resizeDust() {
       dustCanvas.width  = dustCanvas.clientWidth  * DDPR;
@@ -227,7 +229,7 @@
 
     /* Sample actual glyph pixels from an offscreen canvas.
        Falls back to random bounding-box fill if getImageData is blocked. */
-    function sampleEl(el, orange, base) {
+    function sampleEl(el, orange, base, outPts, riseSign) {
       var r = el.getBoundingClientRect();
       if (r.width < 2 || r.height < 2) return;
       var text = el.textContent;
@@ -275,7 +277,7 @@
         for (var py = 0; py < H; py += step) {
           for (var px = 0; px < W; px += step) {
             if (data[(py * W + px) * 4 + 3] < 45) continue;
-            addPt(r.left - base.left + px / sc, r.top - base.top + py / sc, orange, base.width);
+            addPt(r.left - base.left + px / sc, r.top - base.top + py / sc, orange, base.width, outPts, riseSign);
           }
         }
       } else {
@@ -283,30 +285,35 @@
         var n = Math.min(100, Math.max(8, Math.round(r.width * r.height / 300)));
         for (var i = 0; i < n; i++) {
           addPt(r.left - base.left + Math.random() * r.width,
-                r.top  - base.top  + Math.random() * r.height, orange, base.width);
+                r.top  - base.top  + Math.random() * r.height, orange, base.width, outPts, riseSign);
         }
       }
     }
 
-    function addPt(sx, sy, orange, totalW) {
+    function addPt(sx, sy, orange, totalW, outPts, riseSign) {
+      var target = outPts || pts;
+      var sign   = (riseSign !== undefined) ? riseSign : -1;
       var xNorm = Math.max(0, Math.min(1, sx / totalW));
-      pts.push({
+      target.push({
         x: sx, y: sy, orange: orange,
         delay:   xNorm * 0.28 + Math.random() * 0.06, /* left→right wave */
-        riseAmt: -(55 + Math.random() * 150),
+        riseAmt: sign * (55 + Math.random() * 150),
         driftX:  (Math.random() - 0.38) * 70,          /* slight rightward bias */
         size:    0.9 + Math.random() * 1.9
       });
     }
 
     function buildDust() {
-      pts = [];
+      pts = []; cPts = [];
       var base = dustCanvas.getBoundingClientRect();
       if (base.width < 10) return;
       document.querySelectorAll(".ht:not(.ht--accent) .ch").forEach(function (el) { sampleEl(el, false, base); });
       document.querySelectorAll(".ht--accent .ch").forEach(function (el)           { sampleEl(el, true,  base); });
       document.querySelectorAll(".hero__serif").forEach(function (el)              { sampleEl(el, false, base); });
       document.querySelectorAll(".dotpulse").forEach(function (el)                 { sampleEl(el, true,  base); });
+      /* compete-line: sample per .ch span so letter-spacing is captured via getBoundingClientRect */
+      document.querySelectorAll(".hc--main .ch").forEach(function (el) { sampleEl(el, false, base, cPts, 1); });
+      document.querySelectorAll(".hc--em .ch").forEach(function (el)   { sampleEl(el, true,  base, cPts, 1); });
       built = pts.length > 0;
     }
 
@@ -326,6 +333,22 @@
           _titleEl.style.opacity = String((1 - appearEff).toFixed(3));
         }
       }
+
+      /* Compete-line phases:
+           Gather    0.62 → 0.80  particles rise from below into text positions
+           Crossfade 0.80 → 0.85  particles fade OUT, text DOM fades IN (never both at 100%)
+           Final out 0.87 → 0.92  everything gone before takeover line
+         renderDust owns _competeEl opacity — no GSAP autoAlpha on this element. */
+      /* gather 0.62→0.76. crossfade is driven by cGatherEff itself — fires the
+         instant particles are in position, no extra scroll gap needed. */
+      var cGatherEff = Math.max(0, Math.min(1, (heroProgress - 0.62) / 0.14));
+      var cCrossRaw  = Math.max(0, Math.min(1, (cGatherEff - 0.88) / 0.12));
+      /* smoothstep: slow-fast-slow S-curve so the crossfade feels organic */
+      var cCrossFade = cCrossRaw * cCrossRaw * (3 - 2 * cCrossRaw);
+      /* Guard on built — same reason as _titleEl: GSAP pin-spacer init scrubs
+         heroTL.progress() to ~0.85 before particles are ready, which would make
+         the text flash visible on hard refresh. */
+      if (_competeEl) _competeEl.style.opacity = built ? String(cCrossFade.toFixed(3)) : "0";
 
       var W = dustCanvas.clientWidth, H = dustCanvas.clientHeight;
       dctx.clearRect(0, 0, W, H);
@@ -358,6 +381,30 @@
         );
         dctx.fill();
       }
+
+      /* Compete-line coalesce: reversed wave — particles start scattered below
+         their rest positions and converge upward into the text shape.
+         (1-cCrossFade) ensures particles fade out exactly as text fades in. */
+      var cAlphaEff = Math.max(0, Math.min(1, (heroProgress - 0.62) / 0.03));
+      for (var j = 0; j < cPts.length; j++) {
+        var cp = cPts[j];
+        var cWaveT   = Math.max(0, Math.min(1, (cGatherEff - cp.delay) / 0.65));
+        var reverseT = 1 - cWaveT;   /* 1 = scattered below, 0 = at rest */
+        var cAlpha   = cWaveT * cWaveT * cAlphaEff * (1 - cCrossFade);
+        if (cAlpha < 0.012) continue;
+
+        dctx.globalAlpha = cAlpha;
+        dctx.fillStyle   = cp.orange ? "rgb(255,128,0)" : "rgb(242,237,230)";
+        dctx.beginPath();
+        dctx.arc(
+          cp.x + cp.driftX  * reverseT,
+          cp.y + cp.riseAmt * reverseT,
+          Math.max(0.4, cp.size * (1 - reverseT * 0.35)),
+          0, 6.2832
+        );
+        dctx.fill();
+      }
+
       dctx.globalAlpha = 1;
     }
 
@@ -481,7 +528,7 @@
     }
     var heroTL = gsap.timeline({
       scrollTrigger: {
-        trigger: "#hero", start: "top top", end: "+=320%",
+        trigger: "#hero", start: "top top", end: "+=240%",
         scrub: 0.5, pin: true, anticipatePin: 1
       },
       defaults: { ease: "none", onUpdate: applyJ }
@@ -612,8 +659,15 @@
           onLeave: function () {
             corridorDone = true;
             posters.forEach(function (p) { gsap.set(p, { visibility: "hidden" }); });
+            gsap.set(stopSvg, { display: 'none' });
+            gsap.set(cam, { z: 0 });
           },
-          onEnterBack: function () { corridorDone = false; camUpdate(); }
+          onEnterBack: function () {
+            corridorDone = false;
+            gsap.set(cam, { z: corridorDepth });
+            gsap.set(stopSvg, { display: '' });
+            camUpdate();
+          }
         },
         defaults: { ease: "none" }
       });

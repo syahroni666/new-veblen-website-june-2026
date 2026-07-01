@@ -1,0 +1,577 @@
+/* ════════════════════════════════════════════════════════════
+   MOBILE.CSS  —  Responsive overrides for tablet + mobile.
+   Loaded after main.css. Desktop CSS is NEVER modified here.
+   Breakpoints:
+     1024px  tablet
+      880px  nav collapse
+      768px  mobile
+      480px  small mobile
+   ════════════════════════════════════════════════════════════ */
+
+
+/* ══════════════════════════════════════════════════
+   ROOT / SPACING
+   ══════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  :root {
+    --pad: 1.25rem;
+    --gap: 3.5rem;
+  }
+}
+@media (max-width: 480px) {
+  :root {
+    --pad: 1rem;
+    --gap: 3rem;
+  }
+}
+
+
+/* ══════════════════════════════════════════════════
+   NAV — hamburger menu
+   Burger hidden on desktop; visible at ≤880px.
+   .nav__links was moved OUTSIDE <header class="nav"> in index.html
+   so that backdrop-filter on .nav.is-scrolled can't trap it as a
+   fixed-position containing block (Chrome bug). On desktop we
+   re-position it as a fixed floating center bar.
+   ══════════════════════════════════════════════════ */
+
+.nav__burger { display: none; }
+
+/* DESKTOP (> 880px): float nav__links back into the nav bar area */
+@media (min-width: 881px) {
+  .nav { grid-template-columns: 1fr auto; }
+  .nav__links {
+    position: fixed;
+    inset: 0 0 auto 0;
+    height: 58px;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    z-index: 65;
+    pointer-events: auto;
+    background: transparent;
+    transform: none;
+  }
+}
+
+@media (max-width: 880px) {
+
+  /* ── nav grid: logo left, burger far right ── */
+  .nav { grid-template-columns: 1fr auto; }
+  .nav__ctas { display: none; }
+
+
+  /* ── burger button ── */
+  .nav__burger {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    width: 26px;
+    height: 18px;
+    padding: 0;
+    background: none;
+    border: none;
+    cursor: pointer;
+    z-index: 1001;
+    position: relative;
+    flex-shrink: 0;
+  }
+  .nav__burger span {
+    display: block;
+    width: 100%;
+    height: 2px;
+    background: var(--paper);
+    border-radius: 2px;
+    transition: transform 0.28s ease, opacity 0.2s ease;
+    transform-origin: center;
+  }
+  .nav__burger[aria-expanded="true"] span:nth-child(1) {
+    transform: translateY(8px) rotate(45deg);
+  }
+  .nav__burger[aria-expanded="true"] span:nth-child(2) {
+    opacity: 0;
+    transform: scaleX(0);
+  }
+  .nav__burger[aria-expanded="true"] span:nth-child(3) {
+    transform: translateY(-8px) rotate(-45deg);
+  }
+
+  /* ── mobile nav overlay ──
+     Override main.css display:none with display:flex + transform.
+     pointer-events: none when closed so it doesn't block clicks. */
+  .nav__links {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2.5rem;
+    position: fixed;
+    inset: 0;
+    top: 62px;
+    background: var(--ink);
+    z-index: 999;
+    transform: translateX(100%);
+    transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
+    border-top: 1px solid var(--line);
+  }
+  .nav__links.is-open {
+    transform: translateX(0);
+    pointer-events: auto;
+  }
+  .nav__links a {
+    font-size: 1.6rem;
+    font-family: var(--display);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--paper);
+    opacity: 0.85;
+    transition: opacity 0.2s, color 0.2s;
+  }
+  .nav__links a:hover { opacity: 1; color: var(--orange); }
+
+  /* Nav CTAs — hide "Find your path" on very small screens */
+  .nav__ctas { gap: 0.5rem; }
+
+  /* Prevent body scroll when nav is open */
+  body.nav-open { overflow: hidden; }
+}
+
+/* HUD — hide on mobile (static mode; counter never animates) */
+/* Hero — full viewport height in static mode so ticker never bleeds in */
+@media (max-width: 1024px) {
+  .hud { display: none !important; }
+  .static .hero { min-height: 100svh !important; }
+}
+
+
+/* ══════════════════════════════════════════════════
+   HERO
+   ══════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+
+  /* Hero: exact viewport height */
+  .hero { height: 100svh; }
+
+  /* 3-row grid: space / title / space
+     eyebrow anchors to bottom of top space, sub to top of bottom space
+     → title sits at exact vertical centre */
+  .hero__inner {
+    height: 100%;
+    display: grid;
+    grid-template-rows: 1fr auto 1fr;
+    padding: 4.5rem 0 2.5rem;
+    box-sizing: border-box;
+  }
+
+  /* Eyebrow: bottom of top row — sits just above headline */
+  .hero__eyebrow {
+    align-self: end;
+    margin-bottom: 2.5rem;
+    font-size: clamp(0.48rem, 2.6vw, 0.58rem);
+    letter-spacing: 0.03em;
+    white-space: nowrap;
+  }
+
+  /* Title: middle row — exact centre */
+  .hero__title { align-self: center; }
+
+  /* Sub copy: top of bottom row — sits just below headline */
+  .hero__foot { align-self: start; margin-top: 2.5rem; gap: 0; }
+  .hero__sub { font-size: 0.78rem; }
+
+  /* Buttons hidden — sticky CALL NOW / BOOK A CALL handles it */
+  .hero__ctas { display: none; }
+
+  /* Takeover line — flow below sub copy on mobile */
+  .hero__takeover {
+    position: static;
+    opacity: 1;
+    max-width: none;
+    text-align: center;
+    font-size: 0.78rem;
+    margin-top: 0.75rem;
+  }
+}
+
+
+/* ══════════════════════════════════════════════════
+   VIDEO TESTIMONIALS — phone belt
+   Desktop: flex: 0 0 440px, gap: 28px
+   Tablet:  flex: 0 0 360px
+   Mobile:  flex: 0 0 260px, gap: 20px
+   ══════════════════════════════════════════════════ */
+
+@media (max-width: 1024px) {
+  .ph-belt-track .pcard     { flex: 0 0 360px; }
+  .ph-belt-track .ph__shell { max-width: 360px; }
+  .ph-belt-track figcaption { max-width: 360px; }
+}
+
+@media (max-width: 768px) {
+  .ph-belt-track             { gap: 20px; }
+  .ph-belt-track .pcard      { flex: 0 0 260px; }
+  .ph-belt-track .ph__shell  { max-width: 260px; }
+  .ph-belt-track figcaption  { max-width: 260px; }
+
+  /* Recalculate: 7 cards × 260px + 7 × 20px gap = 1960px per loop segment */
+  @keyframes phBeltScroll {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-1960px); }
+  }
+
+  .pcard__quote { font-size: 0.9rem; }
+}
+
+@media (max-width: 480px) {
+  .ph-belt-track .pcard      { flex: 0 0 220px; }
+  .ph-belt-track .ph__shell  { max-width: 220px; }
+  .ph-belt-track figcaption  { max-width: 220px; }
+
+  /* 7 × 220 + 7 × 20 = 1680px */
+  @keyframes phBeltScroll {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-1680px); }
+  }
+}
+
+
+/* ══════════════════════════════════════════════════
+   GOOGLE REVIEWS BELT
+   The grScroll/grScrollReverse use translateX(-50%)
+   so they auto-adjust — only card width needs fixing.
+   ══════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+  .gr-section { padding: 3rem 0; }
+  .gr-section__head h2 { font-size: clamp(1.3rem, 6vw, 1.8rem); }
+  .gr-section__head { margin-bottom: 1.5rem; }
+  .gr-rows { gap: 12px; }
+  .gr-card { width: 240px; padding: 12px 14px; }
+  .gr-card-header { gap: 7px; }
+  .gr-avatar { width: 32px !important; height: 32px !important; font-size: 0.7rem !important; }
+  .gr-name { font-size: 0.78rem; }
+  .gr-time { font-size: 0.68rem; }
+  .gr-stars { font-size: 0.75rem; }
+  .gr-text { font-size: 0.78rem; }
+}
+
+@media (max-width: 480px) {
+  .gr-card { width: 210px; padding: 10px 12px; }
+  .gr-text { font-size: 0.75rem; }
+}
+
+
+/* ══════════════════════════════════════════════════
+   CASE STUDIES BELT
+   csBeltScroll uses translateX(-50%) — auto-adjusts.
+   ══════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+  .cs-belt-card { flex: 0 0 240px; height: 340px; }
+  .cs-belt-head { padding: 0 var(--pad); text-align: center; }
+}
+
+@media (max-width: 480px) {
+  .cs-belt-card { flex: 0 0 210px; height: 310px; }
+}
+
+
+/* ══════════════════════════════════════════════════
+   PROOF — FULLSCREEN CASE PANELS
+   ══════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+  .proof__head { text-align: center; }
+
+  /* All casepanels: minimum height so short-copy panels don't collapse */
+  .casepanel { min-height: 520px !important; }
+
+  .casepanel__big { font-size: clamp(5rem, 22vw, 9rem); }
+
+  /* Force text white — original uses grey-dim / grey which is hard to read on photos */
+  .casepanel__industry { font-size: 0.7rem; color: var(--paper) !important; opacity: 0.9; }
+  .casepanel__meta { max-width: none; color: var(--paper) !important; }
+  .casepanel__meta p { font-size: 0.85rem; color: var(--paper) !important; }
+  .casepanel__client { color: var(--paper) !important; }
+
+  /* Mobile-specific images — all properties !important to beat inline style="" */
+  .cases__track article:nth-child(1) {
+    background-image: url('../assets/real clients-real numbers/LCMB-MOBILE.jpg') !important;
+    background-size: cover !important;
+    background-position: center top !important;
+  }
+  .cases__track article:nth-child(2) {
+    background-image: url('../assets/real clients-real numbers/NT-MOBILE.jpg') !important;
+    background-size: cover !important;
+    background-position: center top !important;
+  }
+  .cases__track article:nth-child(3) {
+    background-image: url('../assets/real clients-real numbers/ADV-MOBILE.jpg') !important;
+    background-size: cover !important;
+    background-position: center top !important;
+  }
+}
+
+
+/* ══════════════════════════════════════════════════
+   FOUNDER / THE GAP
+   Already handled in main.css at 860px / 560px.
+   Minor polish only.
+   ══════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+  .founder__portrait-img { height: 340px; }
+  .founder__comparison { gap: 1rem; }
+}
+
+
+/* ══════════════════════════════════════════════════
+   SERVICES ACCORDION
+   ══════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+  .svc-name { font-size: 1rem; }
+  .svc-num  { font-size: 0.7rem; min-width: 1.6rem; }
+  .svc-row  { gap: 0.75rem; padding: 1.1rem 0; }
+}
+
+
+/* ══════════════════════════════════════════════════
+   CREATIVE / CORRIDOR — MOBILE VIDEO CAROUSEL
+   ══════════════════════════════════════════════════ */
+
+@media (max-width: 1024px) {
+  /* Reset corridor container so carousel centres properly */
+  .corridor { width: 100% !important; margin-left: 0 !important; }
+
+  /* Hide static poster grid — JS carousel takes over */
+  .corridor__cam { display: none !important; }
+
+  /* Carousel outer wrapper */
+  .corridor__mobile-wrap {
+    padding: 1.5rem 0 2.5rem;
+    text-align: center;
+  }
+
+  /* Row: arrow + viewport + arrow */
+  .corridor__mobile-carousel {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+  }
+
+  /* Phone-shaped video viewport */
+  .corridor__carousel-viewport {
+    width: clamp(180px, 58vw, 280px);
+    aspect-ratio: 9 / 16;
+    border-radius: 18px;
+    overflow: hidden;
+    background: #000;
+    position: relative;
+    flex-shrink: 0;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.7);
+  }
+
+  .corridor__slide {
+    position: absolute;
+    inset: 0;
+    display: none;
+  }
+  .corridor__slide.is-active { display: block; }
+
+  .corridor__slide video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  /* Caption gradient overlay */
+  .corridor__slide-info {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    padding: 3rem 1rem 1rem;
+    background: linear-gradient(transparent, rgba(0,0,0,0.75));
+    color: var(--paper);
+    font-family: var(--display);
+    text-align: left;
+  }
+  .corridor__slide-info strong {
+    display: block;
+    font-weight: 800;
+    font-size: 0.9rem;
+    letter-spacing: -0.01em;
+  }
+  .corridor__slide-info span {
+    font-size: 0.72rem;
+    color: var(--orange);
+    font-weight: 600;
+  }
+
+  /* Arrow buttons */
+  .corridor__arrow {
+    width: 42px; height: 42px;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.2);
+    background: rgba(255,255,255,0.07);
+    color: var(--paper);
+    font-size: 1.1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: background 0.2s, border-color 0.2s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .corridor__arrow:active,
+  .corridor__arrow:hover { background: var(--orange); border-color: var(--orange); }
+
+  /* Dot indicators */
+  .corridor__dots {
+    display: flex;
+    justify-content: center;
+    gap: 7px;
+    margin-top: 1rem;
+  }
+  .corridor__dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.25);
+    transition: background 0.25s, transform 0.25s;
+    cursor: pointer;
+  }
+  .corridor__dot.is-active {
+    background: var(--orange);
+    transform: scale(1.4);
+  }
+}
+
+@media (max-width: 768px) {
+  .stopper__top    { font-size: 0.85rem; }
+  .stopper__bottom { font-size: clamp(2.8rem, 12vw, 4.5rem); }
+}
+
+
+/* ══════════════════════════════════════════════════
+   HOW IT WORKS
+   ══════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+  /* Hide vertical timeline line */
+  .hiw__timeline::before { display: none; }
+
+  /* Stack: number above card, centred */
+  .hiw__step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    margin-bottom: 2rem;
+  }
+
+  /* Force node above card regardless of left/right class */
+  .hiw__step--left .hiw__node,
+  .hiw__step--right .hiw__node {
+    grid-column: unset;
+    grid-row: unset;
+    order: -1;
+    margin-bottom: 0.85rem;
+  }
+
+  .hiw__step--left .hiw__card,
+  .hiw__step--right .hiw__card {
+    grid-column: unset;
+    grid-row: unset;
+    width: 100%;
+  }
+
+  .hiw__card-img  { height: 160px; }
+  .hiw__card-body { padding: 1.2rem 1.25rem 1.5rem; }
+  .hiw__card p    { font-size: 0.88rem; }
+}
+
+
+/* ══════════════════════════════════════════════════
+   FORK — PATHWAYS
+   Already handled in main.css at 880px.
+   ══════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+  .forkside { padding: 2rem 1.5rem; }
+  .forkside__price { font-size: 1rem; }
+}
+
+
+/* ══════════════════════════════════════════════════
+   PARTNERSHIP PRICING
+   Already handled in main.css at 1020px.
+   ══════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+  .tier { padding: 2rem 1.5rem; }
+  .partnership > .sub { max-width: none; }
+}
+
+
+/* ══════════════════════════════════════════════════
+   SYSTEMS MENU
+   ══════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+  .menu li {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.4rem;
+    padding: 1.5rem 0;
+  }
+  .menu__price { font-size: 1.4rem; }
+  .menu p { max-width: none; }
+}
+
+
+/* ══════════════════════════════════════════════════
+   FAQ
+   Already handled in main.css at 700px.
+   ══════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+  .faq__item summary { font-size: 0.95rem; }
+  .process h2 { font-size: clamp(2rem, 8vw, 3rem); }
+}
+
+
+/* ══════════════════════════════════════════════════
+   QUALIFY FORM
+   Already handled in main.css at 640px.
+   ══════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+  .qualify h2 { font-size: clamp(2.4rem, 10vw, 4rem); }
+}
+
+
+/* ══════════════════════════════════════════════════
+   FOOTER
+   Already handled in main.css at 880px.
+   ══════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+  .footer { padding: 3rem var(--pad) 2rem; }
+  .footer__cols { gap: 1.5rem; }
+  .footer__legal { font-size: 0.75rem; }
+}
+
+
+/* ══════════════════════════════════════════════════
+   STICKY CTA BAR
+   Already has max-width: 480px rule in main.css.
+   ══════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+  .sticky-cta__name { display: none; }
+}

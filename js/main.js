@@ -11,6 +11,7 @@
   "use strict";
 
   var staticMode = /[?&]static=1/.test(location.search); // QA mode: no animation, all content visible
+  if (!staticMode && window.matchMedia("(max-width: 1024px)").matches) staticMode = true;
   if (staticMode) document.documentElement.classList.add("static");
   var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches || staticMode;
   var isMobile = window.matchMedia("(max-width: 760px)").matches;

@@ -12,6 +12,7 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lexend:wght@200;300;400;500;600;700;800;900&family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" />
 
   <link rel="stylesheet" href="css/main.css?v=ph22" />
+  <link rel="stylesheet" href="css/mobile.css?v=m16" />
 
   <!-- GA4 — Veblen Group property (carried over from v1) -->
   <script>if('scrollRestoration' in history){history.scrollRestoration='manual';}if(location.hash){history.replaceState(null,'',location.pathname+location.search);}window.scrollTo(0,0);</script>
@@ -40,6 +41,9 @@
       <a href="#fork">Pathways</a>
       <a href="#process">FAQ</a>
     </nav>
+    <button class="nav__burger" aria-label="Open menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
     <div class="nav__ctas">
       <a class="btn btn--ghost" href="tel:+61417111117" data-magnetic>
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 13a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 9.91a16 16 0 0 0 6.18 6.18l1.08-.93a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 17.38z"/></svg>
@@ -72,6 +76,10 @@
             <a class="btn btn--solid btn--lg" href="#fork" data-magnetic>Find your path</a>
             <a class="btn btn--ghost btn--lg" href="#proof">See the proof</a>
           </div>
+          <p class="hero__takeover" id="takeover-line" aria-hidden="true">
+            Every dot is a customer in your market.<br />
+            <em>This is what happens when the engine turns on.</em>
+          </p>
         </div>
       </div>
 
@@ -81,11 +89,6 @@
         <p class="hud__value"><span id="hud-num">00.0</span>%</p>
         <div class="hud__bar"><span id="hud-bar"></span></div>
       </div>
-
-      <p class="hero__takeover" id="takeover-line" aria-hidden="true">
-        Every dot is a customer in your market.<br />
-        <em>This is what happens when the engine turns on.</em>
-      </p>
 
       <!-- shown at the heart of the warp, inside the orange world -->
       <p class="hero__warpline" id="warp-line" aria-hidden="true">
@@ -906,6 +909,119 @@
 
   <script src="vendor/gsap.min.js" defer></script>
   <script src="vendor/ScrollTrigger.min.js" defer></script>
-  <script src="js/main.js?v=ph25" defer></script>
+  <script src="js/main.js?v=ph26" defer></script>
+
+  <!-- Mobile corridor video carousel — only runs on ≤1024px -->
+  <script>
+    (function () {
+      if (!window.matchMedia('(max-width: 1024px)').matches) return;
+      var cam = document.getElementById('corridor-cam');
+      if (!cam) return;
+
+      var posters = Array.from(cam.querySelectorAll('.poster'));
+      var current = 0;
+
+      /* ── build DOM ── */
+      var wrap     = document.createElement('div');  wrap.className = 'corridor__mobile-wrap';
+      var carousel = document.createElement('div');  carousel.className = 'corridor__mobile-carousel';
+      var viewport = document.createElement('div');  viewport.className = 'corridor__carousel-viewport';
+      var dots     = document.createElement('div');  dots.className = 'corridor__dots';
+
+      var prev = document.createElement('button');
+      prev.className = 'corridor__arrow'; prev.setAttribute('aria-label', 'Previous');
+      prev.innerHTML = '&#8592;';
+
+      var next = document.createElement('button');
+      next.className = 'corridor__arrow'; next.setAttribute('aria-label', 'Next');
+      next.innerHTML = '&#8594;';
+
+      posters.forEach(function (poster, i) {
+        var src   = poster.getAttribute('data-video') || '';
+        var fig   = poster.querySelector('figcaption');
+        var title = fig ? (fig.childNodes[0] ? fig.childNodes[0].textContent.trim() : '') : '';
+        var cat   = fig ? (fig.querySelector('span') ? fig.querySelector('span').textContent.trim() : '') : '';
+
+        /* slide */
+        var slide = document.createElement('div');
+        slide.className = 'corridor__slide' + (i === 0 ? ' is-active' : '');
+
+        var vid = document.createElement('video');
+        vid.src = src;
+        vid.loop = true;
+        vid.muted = true;
+        vid.setAttribute('playsinline', '');
+        vid.setAttribute('preload', i === 0 ? 'auto' : 'none');
+        slide.appendChild(vid);
+
+        var info = document.createElement('div');
+        info.className = 'corridor__slide-info';
+        info.innerHTML = '<strong>' + title + '</strong><span>' + cat + '</span>';
+        slide.appendChild(info);
+        viewport.appendChild(slide);
+
+        /* dot */
+        var dot = document.createElement('div');
+        dot.className = 'corridor__dot' + (i === 0 ? ' is-active' : '');
+        dot.setAttribute('data-idx', i);
+        dots.appendChild(dot);
+      });
+
+      carousel.appendChild(prev);
+      carousel.appendChild(viewport);
+      carousel.appendChild(next);
+      wrap.appendChild(carousel);
+      wrap.appendChild(dots);
+      cam.parentNode.insertBefore(wrap, cam.nextSibling);
+
+      /* ── navigation ── */
+      function goTo(n) {
+        var slides  = viewport.querySelectorAll('.corridor__slide');
+        var dotEls  = dots.querySelectorAll('.corridor__dot');
+        var oldVid  = slides[current].querySelector('video');
+        if (oldVid) oldVid.pause();
+        slides[current].classList.remove('is-active');
+        dotEls[current].classList.remove('is-active');
+
+        current = (n + slides.length) % slides.length;
+
+        slides[current].classList.add('is-active');
+        dotEls[current].classList.add('is-active');
+        var newVid = slides[current].querySelector('video');
+        if (newVid) { newVid.setAttribute('preload', 'auto'); newVid.load(); newVid.play().catch(function () {}); }
+      }
+
+      prev.addEventListener('click', function () { goTo(current - 1); });
+      next.addEventListener('click', function () { goTo(current + 1); });
+      dots.addEventListener('click', function (e) {
+        var idx = e.target.getAttribute('data-idx');
+        if (idx !== null) goTo(parseInt(idx, 10));
+      });
+
+      /* autoplay first */
+      var firstVid = viewport.querySelector('.corridor__slide.is-active video');
+      if (firstVid) firstVid.play().catch(function () {});
+    })();
+  </script>
+
+  <!-- Hamburger nav toggle — isolated, no dependency on main.js -->
+  <script>
+    (function () {
+      var btn = document.querySelector('.nav__burger');
+      var nav = document.querySelector('.nav__links');
+      if (!btn || !nav) return;
+      btn.addEventListener('click', function () {
+        var open = nav.classList.toggle('is-open');
+        btn.setAttribute('aria-expanded', String(open));
+        document.body.classList.toggle('nav-open', open);
+      });
+      nav.querySelectorAll('a').forEach(function (a) {
+        a.addEventListener('click', function () {
+          nav.classList.remove('is-open');
+          btn.setAttribute('aria-expanded', 'false');
+          document.body.classList.remove('nav-open');
+        });
+      });
+    })();
+  </script>
 </body>
 </html>

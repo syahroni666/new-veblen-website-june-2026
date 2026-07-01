@@ -5,7 +5,6 @@ desktop.ini
 node_modules/
 
 # Unused raw assets — not referenced by any page
-assets/real clients-real numbers/
 assets/coridor-videos/NEW TECH TRAILER MARCH 2026 RECAP.mov.mp4
 assets/coridor-videos/TTTM (thunder) 1080p new thumb.mp4
 docs/

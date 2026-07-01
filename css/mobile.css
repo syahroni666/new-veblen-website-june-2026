@@ -55,6 +55,28 @@
   }
 }
 
+/* MEDIUM DESKTOP (881px–1400px): shrink nav links and CTA proportionally
+   so nothing collides as the browser window narrows. */
+@media (min-width: 881px) and (max-width: 1400px) {
+  .nav__links { gap: clamp(0.6rem, 1.4vw, 2.25rem); font-size: clamp(0.72rem, 0.82vw, 0.88rem); }
+  .nav__ctas { gap: 0.4rem; }
+  .nav__ctas .btn { font-size: clamp(0.7rem, 0.8vw, 0.88rem); padding: 0.4rem clamp(0.6rem, 1vw, 1rem); }
+}
+
+/* STOP SVG fix: preserveAspectRatio="none" distorts STOP at non-widescreen
+   viewports. Give the SVG element itself a 2:1 ratio matching its viewBox
+   and center it — the corridor overflow:hidden clips cleanly. */
+@media (min-width: 881px) {
+  .stopper__svg {
+    width: 100% !important;
+    height: auto !important;
+    aspect-ratio: 2 / 1;
+    top: 50% !important;
+    bottom: auto !important;
+    transform: translateY(-50%);
+  }
+}
+
 @media (max-width: 880px) {
 
   /* ── nav grid: logo left, burger far right ── */
